@@ -4,7 +4,6 @@ from mysql.connector import Error
 myd=py.connect(host='localhost',user='root',passwd='root',database='gym')
 myc=myd.cursor()
 #----------------------------------------login--------------------------------------------------------------------
-  
 def login():
     while True:
         userS=input('enter username-->')
@@ -17,7 +16,7 @@ def login():
             break
         else:
             if rec[0]==passD:
-                print('| ☻ Logged in Succesfull2 ☻  |')
+                print('| ☻ Logged in Succesfully ☻  |')
                 while True:
                     print('[1] veiw ur profile\n[2] Update Profile\n[3]LOGOUT')
                     try:
@@ -34,12 +33,13 @@ def login():
                           FP=myc.fetchone()
                           veryfy(FP)
                     elif ch==2:
-                        print('What u want to update\n[1]:Name\n[2]PH NO\n[3]NONE')
+                        print('What u want to update\n[1]:Name\n[2]PH NO\n[3]pasword')
                         ask1=input('\n->')
                         if ask1== '1':
                             profile_2='select name from membert where name ="{0}"'.format(userS)
                             myc.execute(profile_2)
                             NM=myc.fetchone()
+                            print(NM)
                             print(NM[0],' is ur current name do u wish to change it?')
                             ch=input("YES/NO:")
                             if ch in ['yes',"YES","Y","y"]:
@@ -59,28 +59,29 @@ def login():
                             elif ch=="NO"or"no":
                                 print("NO CHANGE")
                         elif ask1=="2":
-                            query2="select  Contact from membert where name='{}'".format(userS)
+                            query2="select Contact_info from membert where name='{}'".format(userS)
                             myc.execute(query2)
                             MN=myc.fetchone()
                             print(MN[0],'is your current phone no: do you wish to change it?')
                             ch1=input("YES/NO")
                             if ch1 in ['yes',"YES","Y","y"]:
-                                      new_number=int(input("Enter new phone number:"))
-                                      if new_number>10000000000:
-                                          print("WRONG NUMBER")
-                                      else:
-                                          q3="update membert set Contact={0} where name='{1}'".format(new_number,userS)
-                                          myc.execute(q3)
-                                          myd.commit()
+                                
+                                
+                                new_number=int(input("Enter new phone number:"))
+                                      
+                                if new_number>10000000000:
+                                    print("WRONG NUMBER")
+                                else:
+                                    q3="update membert set Contact_info={0} where name='{1}'".format(new_number,userS)
+                                    myc.execute(q3)
+                                    myd.commit()
                         elif ask1=='3':
                             password_change(userS)
                             
                         else:
                             print('NO valid option')
                             
-                            
-                            
-                                    
+                                
                     elif ch==3:
                         print('|LOGGED OUT|\n\n')
                         return 
@@ -96,7 +97,7 @@ def password_change(userS):
     query_1='select password from reg where username="{}"'.format(userS)
     myc.execute(query_1)
     p_w=myc.fetchone()
-    print("|",p_w[0],"|",'>-this is ur current password ')
+    print("|",p_w[0],"|",'>-this is your current password ')
     q1=input('do u want to change it?}|YES/NO|-->')
     if q1 in ['yes',"YES","Y","y"]:
         new_password=input('Enter the new password-->')
@@ -128,7 +129,7 @@ def mid_G():
 #------------------------------------------------registeration------------------------------------------------------    
 def reg():
     print('|REGISTER|')
-    userR=input('Enter ur Name->')
+    userR=input('Enter your Name->')
     if userR.isspace():
         print('Atleast variable characters')
         reg()
@@ -137,7 +138,7 @@ def reg():
         print('NOT A STRONG PASSWORD\n')
         reg()
     else:
-        pass
+        print('')
     if passD.isspace():
          print('NOT A STRONG PASSWORD\n')
          reg()
@@ -158,7 +159,7 @@ def reg():
         myd.commit()
         reg()
     if con>10**9:#len(con)!=10 after debuging
-        print('WRONG NUMBER')
+        print('INVALID NUMBER')
         myc.execute('delete from reg where username="{}"'.format(userR))
         myd.commit()
         reg()
@@ -173,9 +174,7 @@ def reg():
     print('+∞∞∞∞∞∞∞∞∞∞∞∞∞∞∞∞∞∞∞∞∞∞+∞∞∞∞∞∞∞∞∞∞∞∞∞∞∞∞∞∞∞∞∞∞∞∞∞+∞∞∞∞∞∞∞∞∞∞∞∞∞∞∞∞∞∞∞∞∞∞∞∞∞∞∞+')
     ship=input('\nEnter the MemberShip [1] [2] [3] ->')
     
-
     join=date.today() #get todays date
-
 
     #for assigning Jdate and Edate
     if ship== '3':
@@ -188,7 +187,11 @@ def reg():
         date_end= join + timedelta(days=90)  #3 MONTHS
         me='3 MONTHS'
     else:
-        pass
+        myc.execute('delete from reg where username="{}"'.format(userR))
+        myd.commit()
+        print('NO OPTION\n')
+        reg()
+        
     rec=myc.fetchall()
     if rec==None:
         myc.execute('delete from reg where username="{}"'.format(userR))
@@ -218,7 +221,7 @@ def reg():
 while True:
     print('UR CHOICE \n [1]login \n [2]register \n [3]quit')
     try :
-        ch=int(input('enter ur choice-->'))
+        ch=int(input('enter your choice-->'))
     except ValueError:
         print('USE INTEGER')
         continue
