@@ -3,11 +3,101 @@ from datetime import date,timedelta
 from mysql.connector import Error
 myd=py.connect(host='localhost',user='root',passwd='root',database='gym')
 myc=myd.cursor()
-#----------------------------------------login--------------------------------------------------------------------
+#----------------------------------------admin--------------------------------------------------------------------
+def admin(name,pasword):
+    if name.lower() =='admin' and pasword=='log':
+        adminperks()
+#-----------------------------------perks------------------------------------------------------------
+def adminperks():
+    print()
+    print("|⚒️Admin Panel⚒️|")
+    while True:
+        print()
+        print('|1|Show all users details\n|2|Alter Member\n|3|remove user\n|4|quit(back to normal)')
+        ch=input("ENTER THE CHOICE:")
+        if ch=='1':
+            print()
+            myc.execute('select * from membert')
+            rec=myc.fetchall()
+            for i in rec:
+                print('ID:|',i[0],'|USERNAME:',i[1],'|PHNO:|',i[2],'MEMBERSHIP:|',i[3],'|Jdate:|',i[4],'|Edate:|',i[5])
+        elif ch=='2':
+            print()
+            upd_members()
+        elif ch=='3':
+            print()
+            remover()
+        elif ch=='4':
+            print()
+            break
+#-----------------------------------------------remove--------------------------------------------------         
+def remover():
+    #for removing users
+    print("|(💀)REMOVE USER(💀)|\n")
+    try:
+        md=int(input('Enter the mid of user:'))
+        try:
+            myc.execute("select name from membert where mid={0}".format(md))
+            name=myc.fetchone() #this for checking user exist
+            if name==None:
+                print("|Invalid user|")
+                return adminperks()
+                
+            if name[0].lower()=='admin':
+                print("(💀)cant remove admin(💀)\n")
+                return remover()
+        except Error:
+            print('|Invalid user|')
+            return adminperks()
+        try:#for nonetype error
+            myc.execute('delete from membert where mid={0}'.format(md))
+            myd.commit()
+            
+            myc.execute('delete from reg where username="{0}"'.format(name[0]))
+            myd.commit()
+            print("SUCCESFULLY REMOVED USER:",name[0])
+            adminperks()
+        except Error:
+            print('|Invalid user::|')
+            return adminperks()    
+    except ValueError:
+        print('Try again')
+        remover()
+#---------------------------------------------------upd_members---------------------------------------   
+def upd_members():
+    ch=True
+    if ch ==True:
+        try:
+           md=int(input('Enter the mid of user:'))
+        except ValueError:
+            return upd_members()
+            
+        try:
+            myc.execute("select Edate from membert where mid={0}".format(md))
+            time1=myc.fetchone()
+            extend=int(input('membership extender(in days):'))
+            try: 
+                new_EOD= time1[0] + timedelta(days=extend)
+            except OverflowError:
+                print('|⏱️Cant do time travel⏱️|')
+                return upd_members()
+        except TypeError: #nonetype error
+            print('|Invalid user|')
+            return upd_members()
+        try:
+            q='update membert set Edate="{0}" where mid={1}'.format(new_EOD,md)
+            myc.execute(q)
+            myd.commit()
+            print('|Succesfull|')
+        except Error:
+            print('|Something went Wrong|')
+        
+#-----------------------------------------login----------------------------------------------------       
 def login():
     while True:
         userS=input('enter username-->')
         passD=input('enter password-->')
+        admin(userS,passD)
         squer='select password from reg where username="{}"'.format(userS)
         myc.execute(squer)
         rec=myc.fetchone()
@@ -26,16 +116,11 @@ def login():
                         continue
                     if ch==1:
                           print('|UR PROFILE|')
-                          profile='select * from membert where name ="{0}"'.format(userS)
-                          
-                          myc.execute(profile)
-                          
-                          FP=myc.fetchone()
-                          veryfy(FP)
+                          veryfy(userS)
                     elif ch==2:
                         print('What u want to update\n[1]:Name\n[2]PH NO\n[3]pasword')
                         ask1=input('\n->')
-                        if ask1== '1':
+                        if ask1== '1':#for changing name
                             profile_2='select name from membert where name ="{0}"'.format(userS)
                             myc.execute(profile_2)
                             NM=myc.fetchone()
@@ -58,15 +143,13 @@ def login():
                                    
                             elif ch=="NO"or"no":
                                 print("NO CHANGE")
-                        elif ask1=="2":
+                        elif ask1=="2":# for changing phne number
                             query2="select Contact_info from membert where name='{}'".format(userS)
                             myc.execute(query2)
                             MN=myc.fetchone()
                             print(MN[0],'is your current phone no: do you wish to change it?')
                             ch1=input("YES/NO")
                             if ch1 in ['yes',"YES","Y","y"]:
-                                
-                                
                                 new_number=int(input("Enter new phone number:"))
                                       
                                 if new_number>10000000000:
@@ -79,20 +162,18 @@ def login():
                             password_change(userS)
                             
                         else:
-                            print('NO valid option')
-                            
-                                
+                            print('NO valid option')        
                     elif ch==3:
                         print('|LOGGED OUT|\n\n')
                         return 
-                        
+
                     else:
                         print('No option')
                         continue    
             else:
 
                print('wrong password')
-
+#-----------------------------------------------password-----------------------------------------------
 def password_change(userS):
     query_1='select password from reg where username="{}"'.format(userS)
     myc.execute(query_1)
@@ -105,12 +186,14 @@ def password_change(userS):
         myc.execute(query_2)
         myd.commit()
         print('successful changed')
-    
-def veryfy(FP):
+#------------------------------------------------verfy---------------------------------------------   
+def veryfy(userS):
     try:
-        print('MID\t Name\t PH\t\tMEMBERSHIP\t JOINED\t\t END')
+        profile='select * from membert where name ="{0}"'.format(userS)                
+        myc.execute(profile)                
+        FP=myc.fetchone()
         m1,nam,ph,ship,jd,ed = FP[0],FP[1],FP[2],FP[3],str(FP[4]),str(FP[5])
-        print(m1,'\t',nam,'\t',ph,'\t',ship,'\t',jd,'\t',ed)
+        print("MID:",m1,'\nName:',nam,'\nPHNO:',ph,'\nMembership:',ship,'\nJoined:',jd,'\nEND:',ed)
         print()
     except TypeError:
         print('USER NOT FOUND')
@@ -166,7 +249,7 @@ def reg():
         
     print('\n')
     print('+∞∞∞∞∞∞∞∞∞∞∞∞∞∞∞∞∞∞∞∞∞∞+∞∞∞∞∞∞∞∞∞∞∞∞∞∞∞∞∞∞∞∞∞∞∞∞+∞∞∞∞∞∞∞∞∞∞∞∞∞∞∞∞∞∞∞∞∞∞∞∞∞∞∞∞+')
-    print('|[1]:3 month:9150$\t |[2]:6 month:12999$\t  |[3]:12 months:14999$     |')
+    print('|[1]:3 month:9150\u20B9\t |[2]:6 month:12999\u20B9\t  |[3]:12 months:14999\u20B9     |')
     print('|->:Personal Trainer\t |->:Personal Trainer\t  |->:Personal Trainer      |')
     print('|->:10 days MPuase   \t |->:30 days MPuase \t  |->:60 days MPuase        |')
     print('|->:5 swiming session\t |->:5 swiming session \t  |->:5 swiming session     |')
@@ -215,8 +298,7 @@ def reg():
             myc.execute('delete from membert where name="{}"'.format(userR))
             myd.commit()
             reg()
-
-
+print('|❚█══█❚ GYM MANAGEMENT SYSTEM ❚█══█❚|')
 #main loop
 while True:
     print('UR CHOICE \n [1]login \n [2]register \n [3]quit')
